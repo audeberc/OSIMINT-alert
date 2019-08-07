@@ -1,0 +1,8 @@
+[package]
+name = "static_map_monitor"
+version = "0.1.0"
+authors = ["Clément Audebert <clement.audebert@earthcube.eu>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.9.19"
