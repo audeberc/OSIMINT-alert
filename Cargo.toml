@@ -1,0 +1,13 @@
+[package]
+name = "OSIMINT_alert"
+version = "0.1.0"
+authors = ["Clément Audebert <clement@clement-audebert.fr>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.9.19"
+clokwerk = "0.2.1"
+chrono = "0.4"
+serde_json = "1.0.40"
+serde = { version = "1.0.98", features = ["derive"] }
+serde_derive = "1.0.98"
