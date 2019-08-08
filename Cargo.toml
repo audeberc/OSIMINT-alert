@@ -6,3 +6,5 @@ edition = "2018"
 
 [dependencies]
 reqwest = "0.9.19"
+clokwerk = "0.2.1"
+chrono = "0.4"

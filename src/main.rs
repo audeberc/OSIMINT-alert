@@ -6,6 +6,12 @@ use std::io::Write;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::path::Path;
+extern crate clokwerk;
+use clokwerk::{Scheduler, TimeUnits};
+// Import week days and WeekDay
+use clokwerk::Interval::*;
+use std::thread;
+use std::time::Duration;
 
 fn process_request(url: String, logname: String, imageprefix: String){
     utils::create_directories(); // check if directories exist
@@ -43,12 +49,18 @@ fn process_request(url: String, logname: String, imageprefix: String){
 }
 
 fn main() -> Result<(), Box<std::error::Error>> {
+    let mut scheduler = Scheduler::new();
+    fn run_yan()
 
-    let url = map_services::get_yandex_url("sat".to_string(),10.0,20.0,10.5,20.7);
-    process_request(url, String::from("yandex.txt"),String::from("yandex1"));
-    let url = map_services::get_bing_url("Aerial".to_string(),10.0,20.0,10.5,20.7, "BINGKEY".to_string());
-    process_request(url, String::from("bing.txt"),String::from("bing1"));
-    let url = map_services::get_google_url("satellite".to_string(),10.0,20.0,10.5,20.7, "GOOGLEKEY".to_string());
-    process_request(url, String::from("google.txt"),String::from("google1"));
-    Ok(())
+    {   let a = 32.0;
+        let b = 25.0;
+         let url = map_services::get_yandex_url("sat".to_string(),a,b,a+0.5,b+0.5);
+          process_request(url , String::from("yandex.txt"),String::from("yandex1"));
+    }
+    scheduler.every(Seconds(5)).run(run_yan);
+    loop {
+    scheduler.run_pending();
+    thread::sleep(Duration::from_millis(100));
+    }
+
 }
