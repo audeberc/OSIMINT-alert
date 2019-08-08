@@ -1,0 +1,30 @@
+[
+          {
+          "name": "Paris",
+          "source" : "Yandex",
+          "layer" : "sat",
+          "lat_min": 48.844211,
+          "lat_max": 48.84503,
+          "lon_min": 2.331957,
+          "lon_max": 2.341055,
+          "frequency_days": 0,
+          "frequency_hours": 0,
+          "frequency_minutes": 1,
+          "frequency_seconds": 0,
+          "api_key": ""
+      },
+      {
+      "name": "NY",
+      "source" : "Yandex",
+      "layer" : "map",
+      "lat_min": 40.765136 ,
+      "lat_max": 40.7968,
+      "lon_max": -73.979959,
+      "lon_min": -73.946255,
+      "frequency_days": 0,
+      "frequency_hours": 0,
+      "frequency_minutes": 0,
+      "frequency_seconds": 10,
+      "api_key": ""
+  }
+    ]
