@@ -4,7 +4,7 @@
 <p align="center">
         <a> <img src="https://img.shields.io/github/last-commit/audeberc/static-maps-monitor?style=flat-square" /></a>
         <a> <img src="https://img.shields.io/github/license/audeberc/static-maps-monitor" /></a>
-        <a> <img src="https://travis-ci.com/audeberc/static-maps-monitor.svg?branch=master" /></a>
+        <a> <img src="https://travis-ci.com/audeberc/OSIMINT-alert.svg?branch=master" /></a>
 </p>
 
 A simple Rust-based tool to monitor imagery updates in common static-map services (Google, Yandex, Bing, ...) over user-defined areas. 
