@@ -19,40 +19,47 @@ use clokwerk::Scheduler;
 
 fn process_request(url: &String, site_name: &String, img_extension: &String) -> bool{
     utils::create_directories(); // check if directories exist
-    let mut resp = reqwest::get(url).expect("request failed"); // Send HTTP request to static map service
-    let mut buffer: Vec<u8> = vec![];
-    resp.copy_to(&mut buffer)
-        .expect("Failed to copy image data"); // Copy requested image data to buffer
-    let hash_value = hashing::calculate_hash(&buffer); // Compute Hash of image
-                                                       // read previous hash:
-    let mut last_hash: u64 = 0;
-    let log_path = format!("./logs/{}.txt", &site_name);
-    if Path::new(&log_path).exists() {
-        let file = File::open(&log_path).unwrap();
-        let reader = BufReader::new(file);
-        let lines: Vec<String> = reader.lines().collect::<Result<_, _>>().unwrap();
-        let last_line = lines.last(); // read last line of log
-        last_hash = last_line.unwrap().split(',').collect::<Vec<&str>>()[0]
-            .parse::<u64>()
-            .unwrap();
-    } else {
-        File::create(&log_path).expect("Failed to create log file");
-    }
-
-    if hash_value != last_hash {
-        // Image is different from last hash !
-        // Save image, log into file
-        let mut out = File::create(format!("./imgs/{}_{}.{}", site_name, hash_value, img_extension))
-            .expect("failed to create file");
-        let mut pos = 0;
-        while pos < buffer.len() {
-            let bytes_written = out.write(&buffer[pos..]);
-            pos += bytes_written.unwrap();
+    let resp = reqwest::get(url);
+    if !resp.is_err() {
+        let mut resp_cont = resp.unwrap();
+        let mut buffer: Vec<u8> = vec![];
+        resp_cont.copy_to(&mut buffer)
+            .expect("Failed to copy image data"); // Copy requested image data to buffer
+        let hash_value = hashing::calculate_hash(&buffer); // Compute Hash of image
+                                                           // read previous hash:
+        let mut last_hash: u64 = 0;
+        let log_path = format!("./logs/{}.txt", &site_name);
+        if Path::new(&log_path).exists() {
+            let file = File::open(&log_path).unwrap();
+            let reader = BufReader::new(file);
+            let lines: Vec<String> = reader.lines().collect::<Result<_, _>>().unwrap();
+            let last_line = lines.last(); // read last line of log
+            last_hash = last_line.unwrap().split(',').collect::<Vec<&str>>()[0]
+                .parse::<u64>()
+                .unwrap();
+        } else {
+            File::create(&log_path).expect("Failed to create log file");
         }
-        utils::write_log(log_path, hash_value);
-        true
+
+        if hash_value != last_hash {
+            // Image is different from last hash !
+            // Save image, log into file
+            let mut out = File::create(format!("./imgs/{}_{}.{}", site_name, hash_value, img_extension))
+                .expect("failed to create file");
+            let mut pos = 0;
+            while pos < buffer.len() {
+                let bytes_written = out.write(&buffer[pos..]);
+                pos += bytes_written.unwrap();
+            }
+            utils::write_log(log_path, hash_value);
+            true
+        }
+        else {
+            false
+        }
     }
     else {
+        println!("Connection error: couldn't reach url");
         false
     }
 }
