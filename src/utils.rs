@@ -3,7 +3,7 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::Write;
 use std::path::Path;
-
+use std::fs::File;
 use crate::map_services;
 extern crate serde_derive;
 
@@ -76,5 +76,16 @@ pub fn get_img_extension(job: &Jobs,) -> String {
     }
     else {
         "jpg".to_string()
+    }
+}
+
+pub fn save_image(site_name: String, hash_value: u64, img_extension: String, buffer: Vec<u8>) {
+
+    let mut out = File::create(format!("./imgs/{}_{}.{}", site_name, hash_value, img_extension))
+        .expect("failed to create file");
+    let mut pos = 0;
+    while pos < buffer.len() {
+        let bytes_written = out.write(&buffer[pos..]);
+        pos += bytes_written.unwrap();
     }
 }

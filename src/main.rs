@@ -44,13 +44,7 @@ fn process_request(url: &String, site_name: &String, img_extension: &String) -> 
         if hash_value != last_hash {
             // Image is different from last hash !
             // Save image, log into file
-            let mut out = File::create(format!("./imgs/{}_{}.{}", site_name, hash_value, img_extension))
-                .expect("failed to create file");
-            let mut pos = 0;
-            while pos < buffer.len() {
-                let bytes_written = out.write(&buffer[pos..]);
-                pos += bytes_written.unwrap();
-            }
+            utils::save_image(site_name.to_string(), hash_value, img_extension.to_string(), buffer);
             utils::write_log(log_path, hash_value);
             true
         }
