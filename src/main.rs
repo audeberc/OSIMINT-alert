@@ -17,46 +17,7 @@ extern crate clokwerk;
 use clokwerk::Interval::*;
 use clokwerk::Scheduler;
 
-fn process_request(url: &String, site_name: &String, img_extension: &String) -> bool{
-    utils::create_directories(); // check if directories exist
-    let resp = reqwest::get(url);
-    if !resp.is_err() {
-        let mut resp_cont = resp.unwrap();
-        let mut buffer: Vec<u8> = vec![];
-        resp_cont.copy_to(&mut buffer)
-            .expect("Failed to copy image data"); // Copy requested image data to buffer
-        let hash_value = hashing::calculate_hash(&buffer); // Compute Hash of image
-                                                           // read previous hash:
-        let mut last_hash: u64 = 0;
-        let log_path = format!("./logs/{}.txt", &site_name);
-        if Path::new(&log_path).exists() {
-            let file = File::open(&log_path).unwrap();
-            let reader = BufReader::new(file);
-            let lines: Vec<String> = reader.lines().collect::<Result<_, _>>().unwrap();
-            let last_line = lines.last(); // read last line of log
-            last_hash = last_line.unwrap().split(',').collect::<Vec<&str>>()[0]
-                .parse::<u64>()
-                .unwrap();
-        } else {
-            File::create(&log_path).expect("Failed to create log file");
-        }
 
-        if hash_value != last_hash {
-            // Image is different from last hash !
-            // Save image, log into file
-            utils::save_image(site_name.to_string(), hash_value, img_extension.to_string(), buffer);
-            utils::write_log(log_path, hash_value);
-            true
-        }
-        else {
-            false
-        }
-    }
-    else {
-        println!("Connection error: couldn't reach url");
-        false
-    }
-}
 
 fn main() -> Result<(), Box<std::error::Error>> {
     let mut scheduler = Scheduler::new();
@@ -85,20 +46,35 @@ fn main() -> Result<(), Box<std::error::Error>> {
             job.plus(Days(j.frequency_days));
         }
 
-        let fun = move || {
-            let time: DateTime<Utc> = Utc::now();
-            println!("{} Processing URL {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
-            let new_image = process_request(&url, &prefix, &img_extension);
-            if new_image {
-            println!("{} ! New image detected ! {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
-            }
-        };
+        if j.source == "Wikimapia"{
+            let fun = move || {
+                let time: DateTime<Utc> = Utc::now();
+                println!("{} Processing URL {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
+                let new_image = utils::process_json_request(&url, &prefix);
+                if new_image {
+                println!("{} ! New data detected ! {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
+                }
+            };
+            job.run(fun);
+        }
+        else {
+            let fun = move || {
+                let time: DateTime<Utc> = Utc::now();
+                println!("{} Processing URL {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
+                let new_image = utils::process_image_request(&url, &prefix, &img_extension);
+                if new_image {
+                println!("{} ! New data detected ! {}, {}, next call in {}", time.to_string(), &url, &prefix, &next_call);
+                }
+            };
+            job.run(fun);
+        }
 
-        job.run(fun);
+
     }
 
     loop {
         scheduler.run_pending();
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_millis(500));
     }
-}
+    
+    }
