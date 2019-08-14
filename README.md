@@ -20,7 +20,7 @@ The tool work with either image data (Aerial & satellite imagery, raster maps) o
 ## Screenshot 
 
 ![loging_example](https://github.com/audeberc/static-maps-monitor/blob/master/ressources_readme/log.png)
-![Illu](https://github.com/audeberc/OSIMINT-alert/blob/Wikimapia_API/ressources_readme/illu_1.png)
+![Illu](https://github.com/audeberc/OSIMINT-alert/blob/master/ressources_readme/illu_1.png)
 
 
 ## Build 
