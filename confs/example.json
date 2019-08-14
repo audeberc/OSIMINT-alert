@@ -1,30 +1,45 @@
 [
-          {
-          "name": "Paris",
-          "source" : "Yandex",
-          "layer" : "sat",
-          "lat_min": 48.844211,
-          "lat_max": 48.84503,
-          "lon_min": 2.331957,
-          "lon_max": 2.341055,
-          "frequency_days": 0,
-          "frequency_hours": 0,
-          "frequency_minutes": 1,
-          "frequency_seconds": 0,
-          "api_key": ""
+    {
+    "name": "Bagdad_Yandex_Imagery",
+    "source" : "Yandex",
+    "layer" : "sat",
+    "lat_min": 33.232370,
+    "lat_max": 33.290360,
+    "lon_min": 44.196796,
+    "lon_max": 44.276104,
+    "frequency_days": 0,
+    "frequency_hours": 3,
+    "frequency_minutes": 0,
+    "frequency_seconds": 0,
+    "api_key": ""
       },
       {
-      "name": "NY",
+      "name": "Bagdad_Yandex_Map",
       "source" : "Yandex",
       "layer" : "map",
-      "lat_min": 40.765136 ,
-      "lat_max": 40.7968,
-      "lon_max": -73.979959,
-      "lon_min": -73.946255,
+      "lat_min": 33.232370 ,
+      "lat_max": 33.290360,
+      "lon_max": 44.196796,
+      "lon_min": 44.276104,
       "frequency_days": 0,
+      "frequency_hours": 6,
+      "frequency_minutes": 0,
+      "frequency_seconds": 0,
+      "api_key": ""
+  },
+    {
+      "name": "Bagdad_Yandex_Wikimapia",
+      "source" : "Wikimapia",
+      "layer" : "",
+      "lat_min": 33.232370,
+      "lat_max": 33.290360,
+      "lon_min": 44.196796,
+      "lon_max": 44.276104,
+      "frequency_days": 4,
       "frequency_hours": 0,
       "frequency_minutes": 0,
-      "frequency_seconds": 10,
-      "api_key": ""
+      "frequency_seconds": 0,
+      "api_key": "XXXXXX"
   }
+
     ]

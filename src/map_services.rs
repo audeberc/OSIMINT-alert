@@ -55,10 +55,12 @@ pub fn get_bing_url(
 }
 
 pub fn get_wikimapia_url(
-    layer: String, lon0: f64,
+    layer: String,
+    lon0: f64,
     lat0: f64,
     lon1: f64,
     lat1: f64,
-    api_key: String) -> String {
+    api_key: String,
+) -> String {
     format!("http://api.wikimapia.org/?function=box&bbox={},{},{},{}&key={}&format=json&count=100&category={}",lon0, lat0, lon1, lat1, api_key, layer)
 }

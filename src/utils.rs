@@ -1,19 +1,20 @@
 use chrono::prelude::*;
+use std::fs::File;
 use std::fs::OpenOptions;
+use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
 use std::io::Write;
-use std::path::Path;
-use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::hash::{Hash, Hasher};
+use std::path::Path;
 
-use crate::map_services;
 use crate::hashing;
+use crate::map_services;
 extern crate serde_derive;
 
 extern crate serde;
 extern crate serde_json;
 use serde::{Deserialize, Serialize};
+
 #[derive(Deserialize)]
 pub struct Jobs {
     pub name: String,
@@ -74,30 +75,31 @@ pub fn get_url_function(
     }
 }
 
-pub fn get_img_extension(job: &Jobs,) -> String {
-
-    if job.source  == "Yandex"{
+pub fn get_img_extension(job: &Jobs) -> String {
+    if job.source == "Yandex" {
         match job.layer.as_ref() {
-        "map" => "png".to_string(),
-        _ => "jpg".to_string(),
+            "map" => "png".to_string(),
+            _ => "jpg".to_string(),
         }
-    }
-    else {
+    } else {
         "jpg".to_string()
     }
 }
 
-
 fn save_json(site_name: String, hash_value: u64, buffer: Vec<wiki_data>) {
-
-    serde_json::to_writer(&File::create(format!("./jsons/{}_{}.json", site_name, hash_value)).unwrap(), &buffer).expect("failed to write json");
+    serde_json::to_writer(
+        &File::create(format!("./jsons/{}_{}.json", site_name, hash_value)).unwrap(),
+        &buffer,
+    )
+    .expect("failed to write json");
 }
 
-
 pub fn save_image(site_name: String, hash_value: u64, img_extension: String, buffer: Vec<u8>) {
-
-    let mut out = File::create(format!("./imgs/{}_{}.{}", site_name, hash_value, img_extension))
-        .expect("failed to create file");
+    let mut out = File::create(format!(
+        "./imgs/{}_{}.{}",
+        site_name, hash_value, img_extension
+    ))
+    .expect("failed to create file");
     let mut pos = 0;
     while pos < buffer.len() {
         let bytes_written = out.write(&buffer[pos..]);
@@ -105,13 +107,14 @@ pub fn save_image(site_name: String, hash_value: u64, img_extension: String, buf
     }
 }
 
-pub fn process_image_request(url: &String, site_name: &String, img_extension: &String) -> bool{
+pub fn process_image_request(url: &String, site_name: &String, img_extension: &String) -> bool {
     create_directories(); // check if directories exist
     let resp = reqwest::get(url);
     if !resp.is_err() {
         let mut resp_cont = resp.unwrap();
         let mut buffer: Vec<u8> = vec![];
-        resp_cont.copy_to(&mut buffer)
+        resp_cont
+            .copy_to(&mut buffer)
             .expect("Failed to copy image data"); // Copy requested image data to buffer
         let hash_value = hashing::calculate_hash(&buffer); // Compute Hash of image
                                                            // read previous hash:
@@ -132,15 +135,18 @@ pub fn process_image_request(url: &String, site_name: &String, img_extension: &S
         if hash_value != last_hash {
             // Image is different from last hash !
             // Save image, log into file
-            save_image(site_name.to_string(), hash_value, img_extension.to_string(), buffer);
+            save_image(
+                site_name.to_string(),
+                hash_value,
+                img_extension.to_string(),
+                buffer,
+            );
             write_log(log_path, hash_value);
             true
-        }
-        else {
+        } else {
             false
         }
-    }
-    else {
+    } else {
         println!("Connection error: couldn't reach url");
         false
     }
@@ -154,34 +160,34 @@ struct wiki_response {
     page: Option<u32>,
     count: Option<u32>,
     found: Option<String>,
-    folder: Option<Vec<wiki_data>>
+    folder: Option<Vec<wiki_data>>,
 }
 
 #[derive(Deserialize, Serialize)]
-struct WikiDebug{
+struct WikiDebug {
     code: Option<u32>,
-    message: String
+    message: String,
 }
 
 #[derive(Deserialize, Serialize)]
-struct Location_data{
+struct Location_data {
     north: f64,
     east: f64,
     south: f64,
-    west: f64
+    west: f64,
 }
 #[derive(Deserialize, Serialize)]
-struct Coords_data{
-    x:f64,
-    y:f64
+struct Coords_data {
+    x: f64,
+    y: f64,
 }
 #[derive(Deserialize, Serialize)]
-struct wiki_data{
+struct wiki_data {
     id: Option<String>, // Option because of badly formated strings
-    name:Option<String>,
+    name: Option<String>,
     url: Option<String>,
     location: Location_data,
-    polygon: Vec<Coords_data>
+    polygon: Vec<Coords_data>,
 }
 impl Hash for wiki_data {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -189,38 +195,34 @@ impl Hash for wiki_data {
     }
 }
 
-pub fn process_json_request(url: &String, site_name: &String) -> bool{
+pub fn process_json_request(url: &String, site_name: &String) -> bool {
     create_directories(); // check if directories exist
     let mut url_mod = format!("{}&page=1", url);
     let mut resp = reqwest::get(&url_mod).unwrap();
     let mut page_id = 2;
-    let mut all_data : Vec<wiki_data> = vec![];
+    let mut all_data: Vec<wiki_data> = vec![];
     if resp.status().is_success() {
-        let content : wiki_response = resp.json().unwrap();
-        if content.version.is_none(){
-                let debug = content.debug.unwrap();
-                println!("error {}, {}", &debug.code.unwrap(), &debug.message);
-        }
-        else{
+        let content: wiki_response = resp.json().unwrap();
+        if content.version.is_none() {
+            let debug = content.debug.unwrap();
+            println!("error {}, {}", &debug.code.unwrap(), &debug.message);
+        } else {
             let mut data = content.folder.unwrap();
             all_data.append(&mut data);
             let number_of_items = content.found.unwrap().parse::<i32>().unwrap();
-            let number_of_pages = (number_of_items as f64 / 100.0).floor() as u32 + 1 ;
-            while page_id < number_of_pages + 1
-            {
+            let number_of_pages = (number_of_items as f64 / 100.0).floor() as u32 + 1;
+            while page_id < number_of_pages + 1 {
                 url_mod = format!("{}&page={}", url, page_id);
                 let mut resp = reqwest::get(&url_mod).unwrap();
                 if resp.status().is_success() {
-                    let content : wiki_response = resp.json().unwrap();
-                    if content.version.is_none(){
-                            let debug = content.debug.unwrap();
-                            println!("error {}, {}", &debug.code.unwrap(), &debug.message);
-                    }
-                    else{
+                    let content: wiki_response = resp.json().unwrap();
+                    if content.version.is_none() {
+                        let debug = content.debug.unwrap();
+                        println!("error {}, {}", &debug.code.unwrap(), &debug.message);
+                    } else {
                         let mut data = content.folder.unwrap();
                         all_data.append(&mut data);
                     }
-
                 }
                 page_id += 1;
             }
@@ -245,19 +247,14 @@ pub fn process_json_request(url: &String, site_name: &String) -> bool{
             save_json(site_name.to_string(), hash_value, all_data);
             write_log(log_path, hash_value);
             true
-        }
-        else {
+        } else {
             false
         }
-
-        }
-     else if resp.status().is_server_error() {
+    } else if resp.status().is_server_error() {
         println!("server error!");
         false
     } else {
         println!("Something else happened. Status: {:?}", resp.status());
         false
     }
-
-
 }
