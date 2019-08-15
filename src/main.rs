@@ -40,8 +40,8 @@ fn main() -> Result<(), Box<std::error::Error>> {
         if j.frequency_days != 0 {
             job.plus(Days(j.frequency_days));
         }
-
-        if j.source == "Wikimapia" {
+        let source = j.source;
+        if source == "Wikimapia" || source == "OSM" {
             let fun = move || {
                 let time: DateTime<Utc> = Utc::now();
                 println!(
@@ -51,7 +51,13 @@ fn main() -> Result<(), Box<std::error::Error>> {
                     &prefix,
                     &next_call
                 );
-                let new_image = utils::process_json_request(&url, &prefix);
+                let mut new_image = false;
+                if source == "Wikimapia" {
+                    new_image = utils::process_wikimapia_json_request(&url, &prefix);
+                }
+                if source == "OSM" {
+                    new_image = utils::process_OSM_json_request(&url, &prefix);
+                }
                 if new_image {
                     println!(
                         "{} ! New json data detected ! {}, {}, next call in {}",

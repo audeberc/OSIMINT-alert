@@ -71,6 +71,7 @@ pub fn get_url_function(
         "Google" => map_services::get_google_url,
         "Bing" => map_services::get_bing_url,
         "Wikimapia" => map_services::get_wikimapia_url,
+        "OSM" => map_services::get_OSM_url,
         _ => map_services::get_yandex_url,
     }
 }
@@ -86,13 +87,22 @@ pub fn get_img_extension(job: &Jobs) -> String {
     }
 }
 
-fn save_json(site_name: String, hash_value: u64, buffer: Vec<wiki_data>) {
+fn save_wikimapia_json(site_name: String, hash_value: u64, buffer: Vec<wiki_data>) {
     serde_json::to_writer(
         &File::create(format!("./jsons/{}_{}.json", site_name, hash_value)).unwrap(),
         &buffer,
     )
     .expect("failed to write json");
 }
+
+fn save_osm_json(site_name: String, hash_value: u64, buffer: Vec<osm_node>) {
+    serde_json::to_writer(
+        &File::create(format!("./jsons/{}_{}.json", site_name, hash_value)).unwrap(),
+        &buffer,
+    )
+    .expect("failed to write json");
+}
+
 
 pub fn save_image(site_name: String, hash_value: u64, img_extension: String, buffer: Vec<u8>) {
     let mut out = File::create(format!(
@@ -195,7 +205,7 @@ impl Hash for wiki_data {
     }
 }
 
-pub fn process_json_request(url: &String, site_name: &String) -> bool {
+pub fn process_wikimapia_json_request(url: &String, site_name: &String) -> bool {
     create_directories(); // check if directories exist
     let mut url_mod = format!("{}&page=1", url);
     let mut resp = reqwest::get(&url_mod).unwrap();
@@ -244,7 +254,75 @@ pub fn process_json_request(url: &String, site_name: &String) -> bool {
         if hash_value != last_hash {
             // Image is different from last hash !
             // Save image, log into file
-            save_json(site_name.to_string(), hash_value, all_data);
+            save_wikimapia_json(site_name.to_string(), hash_value, all_data);
+            write_log(log_path, hash_value);
+            true
+        } else {
+            false
+        }
+    } else if resp.status().is_server_error() {
+        println!("server error!");
+        false
+    } else {
+        println!("Something else happened. Status: {:?}", resp.status());
+        false
+    }
+}
+
+#[derive(Deserialize)]
+struct overpass_response {
+    version: Option<f64>,
+    generator: Option<String>,
+    osm3s: Option<osm3s>,
+    elements: Option<Vec<osm_node>>,
+}
+
+#[derive(Deserialize, Serialize)]
+struct osm_node {
+    #[serde(rename="type")]
+    type_: String,
+    id: i64,
+    lat: Option<f64>,
+    lon: Option<f64>,
+    tags: Option<serde_json::Value> // Various OSM tag > not strongly typed
+}
+
+
+#[derive(Deserialize)]
+struct osm3s {
+    timestamp_osm_base: String,
+    copyright: String
+}
+impl Hash for osm_node {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+pub fn process_OSM_json_request(url: &String, site_name: &String) -> bool {
+    create_directories(); // check if directories exist
+
+    let mut resp = reqwest::get(url).unwrap();
+    if resp.status().is_success() {
+        let content: overpass_response = resp.json().unwrap();
+        let mut data = content.elements.unwrap();
+        let hash_value = hashing::calculate_hash(&data);
+        let mut last_hash: u64 = 0;
+        let log_path = format!("./logs/{}.txt", &site_name);
+        if Path::new(&log_path).exists() {
+            let file = File::open(&log_path).unwrap();
+            let reader = BufReader::new(file);
+            let lines: Vec<String> = reader.lines().collect::<Result<_, _>>().unwrap();
+            let last_line = lines.last(); // read last line of log
+            last_hash = last_line.unwrap().split(',').collect::<Vec<&str>>()[0]
+                .parse::<u64>()
+                .unwrap();
+        } else {
+            File::create(&log_path).expect("Failed to create log file");
+        }
+        if hash_value != last_hash {
+            // Image is different from last hash !
+            // Save image, log into file
+            save_osm_json(site_name.to_string(), hash_value, data);
             write_log(log_path, hash_value);
             true
         } else {
