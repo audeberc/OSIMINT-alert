@@ -13,6 +13,10 @@ extern crate clokwerk;
 use clokwerk::Interval::*;
 use clokwerk::Scheduler;
 
+extern crate colored; // not needed in Rust 2018
+
+use colored::*;
+
 fn main() -> Result<(), Box<std::error::Error>> {
     let mut scheduler = Scheduler::new();
     let args: Vec<String> = env::args().collect();
@@ -45,11 +49,12 @@ fn main() -> Result<(), Box<std::error::Error>> {
             let fun = move || {
                 let time: DateTime<Utc> = Utc::now();
                 println!(
-                    "{} Processing URL {}, {}, next call in {}",
-                    time.to_string(),
-                    &url,
-                    &prefix,
-                    &next_call
+                    "{} {} URL {}, {}, next call in {}",
+                    time.to_string().blue(),
+                    "Processing".green(),
+                    &url.underline(),
+                    &prefix.bold(),
+                    &next_call.bold()
                 );
                 let mut new_image = false;
                 if source == "Wikimapia" {
@@ -60,10 +65,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 }
                 if new_image {
                     println!(
-                        "{} ! New json data detected ! {}, {}, next call in {}",
-                        time.to_string(),
-                        &url,
-                        &prefix,
+                        "{} ! {} ! {}, {}, next call in {}",
+                        time.to_string().blue(),
+                        "New json data detected".yellow(),
+                        &url.underline(),
+                        &prefix.bold(),
                         &next_call
                     );
                 }
@@ -73,17 +79,19 @@ fn main() -> Result<(), Box<std::error::Error>> {
             let fun = move || {
                 let time: DateTime<Utc> = Utc::now();
                 println!(
-                    "{} Processing URL {}, {}, next call in {}",
-                    time.to_string(),
-                    &url,
-                    &prefix,
+                    "{} {} URL {}, {}, next call in {}",
+                    time.to_string().blue(),
+                    "Processing".green(),
+                    &url.underline(),
+                    &prefix.bold(),
                     &next_call
                 );
                 let new_image = utils::process_image_request(&url, &prefix, &img_extension);
                 if new_image {
                     println!(
-                        "{} ! New image detected ! {}, {}, next call in {}",
-                        time.to_string(),
+                        "{} ! {} ! {}, {}, next call in {}",
+                        time.to_string().blue(),
+                        "New image data detected".yellow(),
                         &url,
                         &prefix,
                         &next_call
