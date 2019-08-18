@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
                     new_image = utils::process_wikimapia_json_request(&url, &prefix);
                 }
                 if source == "OSM" {
-                    new_image = utils::process_OSM_json_request(&url, &prefix);
+                    new_image = utils::process_osm_json_request(&url, &prefix);
                 }
                 if new_image {
                     println!(

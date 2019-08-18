@@ -65,20 +65,17 @@ pub fn get_wikimapia_url(
     format!("http://api.wikimapia.org/?function=box&bbox={},{},{},{}&key={}&format=json&count=100&category={}",lon0, lat0, lon1, lat1, api_key, layer)
 }
 
-pub fn get_OSM_url(
+pub fn get_osm_url(
     layer: String,
     lon0: f64,
     lat0: f64,
     lon1: f64,
     lat1: f64,
-    api_key: String,
+    _api_key: String,
 ) -> String {
-
     if layer != "" {
-        format!("http://overpass-api.de/api/interpreter?data=[out:json];node[{0}]({1},{2},{3},{4});way[{0}]({1},{2},{3},{4});relation[{0}]({1},{2},{3},{4})out;",layer, lat0, lon0, lat1, lon1)
+        format!("http://overpass-api.de/api/interpreter?data=[out:json];node[{0}]({1},{2},{3},{4});way[{0}]({1},{2},{3},{4});relation[{0}]({1},{2},{3},{4});out body;>;out skel qt;",layer, lat0, lon0, lat1, lon1)
+    } else {
+        format!("http://overpass-api.de/api/interpreter?data=[out:json];node({0},{1},{2},{3});way({0},{1},{2},{3});relation({0},{1},{2},{3});out body;>;out skel qt;", lat0, lon0, lat1, lon1)
     }
-
-    else{
-        format!("http://overpass-api.de/api/interpreter?data=[out:json];node({0},{1},{2},{3});way({0},{1},{2},{3});out body;>;out skel qt;", lat0, lon0, lat1, lon1) }
-
 }
