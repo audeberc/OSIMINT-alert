@@ -92,8 +92,8 @@ fn main() -> Result<(), Box<std::error::Error>> {
                         "{} ! {} ! {}, {}, next call in {}",
                         time.to_string().blue(),
                         "New image data detected".yellow(),
-                        &url,
-                        &prefix,
+                        &url.underline(),
+                        &prefix.bold(),
                         &next_call
                     );
                 }
