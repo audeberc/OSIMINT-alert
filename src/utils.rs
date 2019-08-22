@@ -250,24 +250,28 @@ pub fn process_wikimapia_json_request(url: &String, site_name: &String) -> bool 
             } else {
                 let mut data = content.folder.unwrap();
                 all_data.append(&mut data);
-                let number_of_items = content.found.unwrap().parse::<i32>().unwrap();
-                let number_of_pages = (number_of_items as f64 / 100.0).floor() as u32 + 1;
-                while page_id < number_of_pages + 1 {
-                    url_mod = format!("{}&page={}", url, page_id);
-                    let mut resp = reqwest::get(&url_mod).unwrap();
-                    if resp.status().is_success() {
-                        let content: WikiResponse = resp.json().unwrap();
-                        if content.version.is_none() {
-                            let debug = content.debug.unwrap();
-                            println!("error {}, {}", &debug.code.unwrap(), &debug.message);
-                        } else {
-                            let mut data = content.folder.unwrap();
-                            all_data.append(&mut data);
+                let number_of_items = content.found;
+                if let Some(number_of_items_string) = number_of_items {
+                    let number_of_items_int = number_of_items_string.parse::<i32>().unwrap();
+                    let number_of_pages = (number_of_items_int as f64 / 100.0).floor() as u32 + 1;
+                    while page_id < number_of_pages + 1 {
+                        url_mod = format!("{}&page={}", url, page_id);
+                        let mut resp = reqwest::get(&url_mod).unwrap();
+                        if resp.status().is_success() {
+                            let content: WikiResponse = resp.json().unwrap();
+                            if content.version.is_none() {
+                                let debug = content.debug.unwrap();
+                                println!("error {}, {}", &debug.code.unwrap(), &debug.message);
+                            } else {
+                                let mut data = content.folder.unwrap();
+                                all_data.append(&mut data);
+                            }
                         }
+                        page_id += 1;
                     }
-                    page_id += 1;
                 }
             }
+
             let hash_value = hashing::calculate_hash(&all_data);
             let mut last_hash: u64 = 0;
             let log_path = format!("./logs/{}.txt", &site_name);
